@@ -1,0 +1,143 @@
+/* NEUMORPHISM CSS */
+
+/* General */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #e0e0e0;
+  font-family: 'Mulish', sans-serif;
+}
+
+/* Typography */
+
+h1 {
+  font-weight: 800;
+  font-size: 3rem;
+  color: #747474;
+}
+
+h2 {
+  font-weight: 800;
+  font-size: 2.25rem;
+  color: #747474;
+}
+
+p {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #353535;
+}
+
+a {
+  text-decoration: none;
+  color: #54affb;
+}
+
+a:hover, a:focus {
+  color: white;
+}
+
+span {
+  color: #54affb;
+}
+
+/* Tables */
+
+table {
+  font-size: 1.25rem;
+  width: 100%;
+  margin-inline: auto;
+  /* border: 3px red double; */
+}
+
+.table-narrow {
+  width: 80%;
+}
+
+/* caption {
+  font-weight: 400;
+} */
+
+td {
+  text-align: center;
+}
+
+th {
+  font-weight: 700;
+}
+
+.reader-td-link {
+  font-weight: 800;
+}
+
+/* Neumorphism Properties */
+
+.neumorphic-border {
+  border-radius: 50px;
+  background: #e0e0e0;
+  box-shadow: inset 5px 5px 10px #bebebe,
+            inset -5px -5px 10px #ffffff;
+}
+
+/* Layout - no flex or grid required */
+/* Layout is rows inside one wrapper */
+
+.wrapper {
+  width: 85%;
+  max-inline-size: 1000px;
+  margin-inline: auto;
+  margin-block-start: 5em;
+  /* border: solid 2px blue; */
+}
+
+.row {
+  margin-block: 1em;
+  margin-inline: auto;
+  padding-block: 1em;
+  text-align: center;
+  /* border: solid 2px yellow; */
+}
+
+/* Flash Messages */
+
+.flash-message {
+  text-align: center;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.flash-success {
+  background-color: #54affb;
+}
+
+.flash-error {
+  background-color: red;
+}
+
+.flash-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+/* Forms */
+
+fieldset {
+  border-style: hidden;
+}
+
+/* Media Queries */
+
+@media(min-width: 935px) {
+  
+  h1 {
+    font-size: 3.5rem;
+  }
+  
+  .table-narrow {
+    width: 45%;
+  }
+
+}

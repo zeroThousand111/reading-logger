@@ -1,0 +1,48 @@
+<div class="neumorphic-border">
+  <div class="row">
+    <h2><span><%= @reader[:name] %></span> &#8217;s Pages Read</h2>
+  </div>
+  <!-- # Stats displayed as paragraphs -->
+  <!-- <div class="row"> -->
+    <!-- <p>Pages read today: <%= @reader[:pages_read_today] %></p> -->
+    <!-- <p>Pages read yesterday: <%= @reader[:pages_read_yesterday] %></p> -->
+    <!-- <p>Pages read in the last 7 days: <%= @reader[:pages_read_seven_days] %></p> -->
+    <!-- <p>Pages read in total: <%= @reader[:pages_read_ever] %></p>
+  <!-- </div> -->
+
+  <!-- # Alternatively, stats displayed in a table -->
+  <div class="row">
+    <table class="table-narrow">
+      <tr>
+        <td>Pages read today:</td>
+        <td><%= @reader[:pages_read_today] %></td>
+      </tr>
+      <tr>
+        <td>Pages read yesterday:</td>
+        <td><%= @reader[:pages_read_yesterday] %></td>
+      </tr>
+      <tr>
+        <td>Pages read in the last 7 days:</td>
+        <td><%= @reader[:pages_read_seven_days] %></td>     
+      </tr>
+      <tr>
+      <td>Pages read in totals:</td>
+        <td><%= @reader[:pages_read_ever] %></td>   
+      </tr>
+    </table>
+  </div>
+
+  <div class="row">
+    <form action="/reader/<%= params[:reader_id] %>" method="post">
+      <fieldset>
+        <label for="pages_read"><p>Enter number of pages read</p></label>
+        <input type="number" name="pages_read">
+        <input type="submit" name="submit" value="Enter">
+      </fieldset>
+    </form>
+  </div>
+
+  <div class="row">
+    <p><a href="/dashboard" >Return to dashboard</a></p>
+  </div>
+</div>

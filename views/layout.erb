@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-US">
+  <head> 
+    <title>Reading Logger</title>
+    <meta charset="UTF-8">
+    <!-- # leave room for links to CSS style sheets -->
+    <link rel="stylesheet" href="/stylesheets/css_reset_josh_w_comeau.css">
+    <!--  # optionally use style sheets and JS scripts from Todos RB175 project -->
+
+    <!-- # Grid Neumorphism CSS Try Out-->
+    <link rel="stylesheet" href="/stylesheets/neumorphism.css">
+    <link rel="stylesheet" type="text/css" <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900;1000&display=swap" rel="stylesheet">
+  </head>
+  <body>
+  <div class="wrapper"
+    <header>
+      <div class="container">
+        <div class="row">
+          <h1><span>Read</span>ing Log</h1>
+        </div>
+        <!-- # This block might be useful later when I allow new users to be added
+        #<div class="actions">
+        #  <%== yield_content :header_links %>
+        #</div> -->
+      </div>
+    </header>
+
+    <% if session[:error] %>
+      <div class="flash-message flash-error">
+        <p class="flash-text"><%= session.delete(:error) %></p>
+      </div>
+    <% end %>
+
+    <% if session[:success] %>
+      <div class="flash-message flash-success">
+        <p class="flash-text"><%= session.delete(:success) %></p>
+      </div>
+    <% end %>
+
+    <main>
+      <%== yield %>
+    </main>
+  </div>
+  </body>
+</html>

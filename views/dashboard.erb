@@ -1,0 +1,37 @@
+<div class="container neumorphic-border">
+  <div class="row">
+    <table class="">
+      <caption>Pages Read</caption>
+      <tr>
+        <th scope="col">Reader Name</th>
+        <th scope="col">Today</th>
+        <th scope="col">Yesterday</th>
+        <th scope="col">Last 7 days</th>
+        <th scope="col">Total</th>
+      </tr>
+      <% @dashboard_data.each do |reader| %>
+        <tr>
+          <td>
+            <a class ="reader-td-link" href="/reader/<%= reader[:reader_id] %>">
+              <%= reader[:name] %>
+            </a>
+          </td>
+          <td><%= reader[:pages_read_today] %></td>
+          <td><%= reader[:pages_read_yesterday] %></td>
+          <td><%= reader[:pages_read_seven_days] %></td>
+          <td><%= reader[:pages_read_ever] %></td>
+        </tr>
+      <% end %>
+      <tr>
+        <td> - </td>
+        <td> - </td>
+        <td> - </td>
+        <td> - </td>
+        <td> - </td>
+      </tr>
+      <tr>
+        <td colspan = "5"><a class ="reader-td-link" href="">Add new reader</td>
+      </tr>
+    </table>
+  </div>
+</div>
