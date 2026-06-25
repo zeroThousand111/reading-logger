@@ -38,7 +38,7 @@ def setup
     # Simeon 
       ## today - 0
       ## yesterday - 20 - check the zero output on display from helper method
-      ## 7 days - 40
+      ## 7 days - 35
       ## total - 100
     # Rya 
       ## today - 55
@@ -48,7 +48,7 @@ def setup
     db.exec(
       "INSERT INTO reading_sessions (reader_id, session_date, pages_read)
       VALUES
-      (1, CURRENT_DATE - INTERVAL '10 day', 60),
+      (1, CURRENT_DATE - INTERVAL '10 day', 65),
       (1, CURRENT_DATE - INTERVAL '2 day', 10),
       (1, CURRENT_DATE - INTERVAL '2 day', 5),
       (1, CURRENT_DATE - INTERVAL '1 day', 15),
@@ -169,7 +169,7 @@ def setup
 
   ### test valid input does update the database
 
-  def test_valid_input_to_pages_read
+  def test_valid_input_to_pages_read_for_reader1_simeon
     #### generate POST HTTP request to Simeon/1 with numeric input "500"
     post "/reader/1", { pages_read: "500" }
 
@@ -177,13 +177,62 @@ def setup
     assert_equal 302, last_response.status
     #### The route redirects to `GET /reader/1`
     assert_equal "http://example.org/reader/1", last_response.headers['location']
-    #### Simeon's Total Pages are now 600
-    assert_includes "600", last_response.body
+
+    #### Check data logic in the POST route
     #### Simeon's Pages Today are now 500
-    assert_includes "500", last_response.body
+
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1 AND session_date = CURRENT_DATE;
+    SQL
+  
+    result = db.exec_params(sql, [1])
+    pages_today = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+
+    #### Simeon's 7 days pages are now 535
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1 
+        AND session_date BETWEEN CURRENT_DATE - INTERVAL '7 days' AND CURRENT_DATE;
+    SQL
+    result = db.exec_params(sql, [1])
+    pages_7_days = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+    assert_equal 535, pages_7_days
+
+    #### Simeon's Total Pages are now 600
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1;
+    SQL
+
+    result = db.exec_params(sql, [1])
+    total_pages = result.getvalue(0, 0).to_i
+
+    assert_equal 600, total_pages
+
+    db.close # Important: close the connection
+    
     #### Success flash message assigned to session[:success]
     assert_equal "The reading session has been logged.", session[:success]
 
+    #### Check presentation logic in the resulting GET route
+    ##### make redirect request then examine the last_request.body for the same values as above
+    #### Check presentation logic in the resulting GET route
+    get last_response["Location"]
+    assert_includes last_response.body, "600" # 600 total pages read
+    assert_includes last_response.body, "535" # 535 pages read in last 7 days
+    assert_includes last_response.body, "500" # 500 pages read today
+  end
+
+  def test_valid_input_to_pages_read_for_reader2_rya
     #### generate POST HTTP request to Rya/2 with numeric input "50"
     post "/reader/2", { pages_read: "50" }
 
@@ -191,12 +240,59 @@ def setup
     assert_equal 302, last_response.status
     #### The route redirects to `GET /reader/2`
     assert_equal "http://example.org/reader/2", last_response.headers['location']
-    #### Rya's Total Pages are now 500
-    assert_includes "500", last_response.body
-    #### Rya's Pages Today are now 500
-    assert_includes "105", last_response.body
     #### Success flash message assigned to session[:success]
-    assert_equal "The reading session has been logged.", session[:success]  
+    assert_equal "The reading session has been logged.", session[:success]
+
+    #### Check data logic in the POST route
+
+    #### Rya's Pages Today are now 105
+
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1 AND session_date = CURRENT_DATE;
+    SQL
+  
+    result = db.exec_params(sql, [2])
+    pages_today = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+
+    #### Rya's 7 days pages are now 455
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1 
+        AND session_date BETWEEN CURRENT_DATE - INTERVAL '7 days' AND CURRENT_DATE;
+    SQL
+
+    result = db.exec_params(sql, [2])
+    pages_7_days = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+    assert_equal 455, pages_7_days
+
+    #### Simeon's Total Pages are now 500
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1;
+    SQL
+
+    result = db.exec_params(sql, [2])
+    total_pages = result.getvalue(0, 0).to_i
+
+    assert_equal 500, total_pages
+
+    db.close # Important: close the connection
+
+    #### Check presentation logic in the resulting GET route
+    ##### make redirect request then examine the last_request.body for the same values as above
+    get last_response["Location"]
+    assert_includes last_response.body, "500" # 500 total pages read
+    assert_includes last_response.body, "455" # 455 pages read in last 7 days
+    assert_includes last_response.body, "105" # 105 pages read today
   end
 
   ## get /reader/add_reader
@@ -205,14 +301,68 @@ def setup
 
     assert_equal 200, last_response.status
     # Test part of expected view template - this is currently failing WHY?
-    assert_includes "<p>Enter name of reader:</p>", last_response.body, "Expected view template content not rendered"
+    assert_includes last_response.body, "<p>Enter name of reader:</p>","Expected view template content not rendered"
   end
 
   ## post /reader/add_reader
 
   ### test invalid input raises flash messages and does not update the database
 
+  def test_invalid_input_to_name_of_new_reader
+    #### empty string
+    post "/reader/add_reader", { reader_name: "" }
+
+    ##### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+    ##### Correct error flash message included in the body
+    assert_includes last_response.body, "Reader names can&#39;t be zero characters long or anonymous!"
+
+    #### String longer than 25 characters (I'm using 30)
+    post "/reader/add_reader", { reader_name: "abcdefghijklmnopqrstuvwxyz!?<>" }
+
+    ##### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+    ##### Correct error flash message included in the body
+    assert_includes last_response.body, "Reader names must be at most 25 characters." 
+
+    #### duplicate name already in use
+    post "/reader/add_reader", { reader_name: "Simeon" }
+    ##### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+
+    ##### Correct error flash message included in the body
+    assert_includes last_response.body, "This name already exists.  Choose another."
+  end
+
   ### test valid input does update the database
 
+  def test_valid_input_to_name_of_new_reader
+    post "/reader/add_reader", {reader_name: "Amiya" }
 
+    #### The route redirects without error, so the status should be 302 (OK).
+    assert_equal 302, last_response.status
+    #### The route redirects to `GET /dashboard`
+    assert_equal "http://example.org/dashboard", last_response.headers['location']
+    #### Success flash message assigned to session[:success]
+    assert_equal "The new reader has been added.", session[:success]
+    
+    #### Check data logic in the POST route
+
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT name
+      FROM readers
+      WHERE id = $1;
+    SQL
+  
+    result = db.exec_params(sql, [3])
+    new_name = result.getvalue(0, 0) # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+
+    assert_equal new_name, "Amiya"
+
+    #### Check presentation logic in the resulting GET route
+    get last_response["Location"]
+    assert_includes last_response.body, "Amiya" # new name present in dashboard
+  end
 end

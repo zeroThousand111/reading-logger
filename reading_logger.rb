@@ -187,6 +187,4 @@ post "/reader/:reader_id" do
     redirect "/reader/#{reader_id}"
   end
 
-
-
 end
