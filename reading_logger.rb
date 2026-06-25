@@ -69,7 +69,35 @@ def detect_invalid_input_for_pages_read(pages_read_string)
   # Now that we know it's a number, check if it's positive.
   return "Pages read must be a number greater than zero." if pages_read_string.to_i <= 0
 
+  # Pages read shouldn't be higher than 999.  None of my kids read that much in one session!
+  return "There is no way you read that much in one go!" if pages_read_string.to_i > 999
+
   # If all checks pass, return nil (falsy, indicating no error).
+  nil
+end
+
+def detect_duplicate_name_for_new_reader(reader_name)
+  # return truthy value if reader_name IS a duplicate and has already been used in the readers.name column of the database
+  
+  # this method returns an array of all values in the readers.name database column
+  names_list = @data.get_all_reader_names_as_array
+
+  # returns truthy string if the new reader name is found in array of names i.e. is not unique.  Compares each name in names_list array with reader_name after whitespace stripped from that string
+  names_list.include?(reader_name.strip)
+end
+
+def detect_invalid_input_for_new_reader_name(reader_name)
+  # Check that reader_name is not empty i.e. ""
+  return "Reader names can't be zero characters long or anonymous!" if reader_name.empty?
+
+  # Check that reader_name is not too long max 25 chars
+  return "Reader names must be at most 25 characters." if reader_name.length > 25
+
+  # Check that reader_name is not a duplicate
+  return "This name already exists.  Choose another." if detect_duplicate_name_for_new_reader(reader_name)
+
+  #
+
   nil
 end
 
@@ -109,6 +137,28 @@ get "/dashboard" do
   erb :dashboard, layout: :layout
 end
 
+get "/reader/add_reader" do
+  erb :add_reader, layout: :layout
+end
+
+post "/reader/add_reader" do
+  # remove leading and trailing whitespace with String#strip
+  reader_name = params[:reader_name].strip
+
+  error = detect_invalid_input_for_new_reader_name(reader_name)
+
+  if error # error is truth
+    # assigns one of many error message strings to session[:error]
+    session[:error] = error
+    # return to add_reader view template and display error message on reload
+    erb :add_reader, layout: :layout
+  else # if error is nil i.e. falsy
+    session[:success] = "The new reader has been added."
+    @data.add_new_reader(reader_name)
+    redirect "/dashboard"
+  end
+end
+
 get "/reader/:reader_id" do
   # do I need to type cast :reader_id and :pages_read?  If not, why?
   reader_id = params[:reader_id]
@@ -136,5 +186,7 @@ post "/reader/:reader_id" do
     session[:success] = "The reading session has been logged."
     redirect "/reader/#{reader_id}"
   end
+
+
 
 end

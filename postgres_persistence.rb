@@ -15,6 +15,14 @@ class PostgresPersistence
     @db.exec_params(statement, params)
   end
 
+  def disconnect
+    # :nocov:
+    # simplecov:disable line
+    @db.close 
+    # simplecov:enable line
+    # :nocov:
+  end
+
   # helper methods
 
   def transform_nil_values_to_zero(value)
@@ -25,6 +33,7 @@ class PostgresPersistence
     end
   end
 
+  # helper method to abstract code that transforms result object into application data object
   def transform_result_object_to_data_structure(result)
     # do the numeric String values need to be Integers?  Maybe not!
     result.map do |tuple| 
@@ -39,10 +48,22 @@ class PostgresPersistence
     end
   end
 
-  # add helper method to abstract code that transforms result object into application data object
-
   # main SQL querying methods
-  
+
+  ## Create Operations
+
+  def add_new_reader(reader_name)
+    sql = "INSERT INTO readers VALUES (DEFAULT, $1);"
+    query(sql, reader_name)
+  end
+
+  def log_reading_session(reader_id, pages_read)
+    sql = "INSERT INTO reading_sessions (reader_id,pages_read) VALUES($1, $2);"
+    query(sql, reader_id, pages_read)
+  end
+
+  ## Read Operations
+
   def fetch_all_data
     sql = <<~SQL
     SELECT
@@ -83,18 +104,22 @@ class PostgresPersistence
     # transform PG::Result object to common data structure for the app
     transform_result_object_to_data_structure(result)
   end
-  
-  def log_reading_session(reader_id, pages_read)
-    sql = "INSERT INTO reading_sessions (reader_id,pages_read) VALUES($1, $2);"
-    query(sql, reader_id, pages_read)
+
+  # returns an array of all values in readers.name column
+  def get_all_reader_names_as_array
+    sql = "SELECT name FROM readers;"
+    result = query(sql)
+    names_list = []
+
+    result.each_row do |row|
+      names_list << row[0]
+    end
+
+    names_list
   end
-  
-  def disconnect
-    # :nocov:
-    # simplecov:disable line
-    @db.close 
-    # simplecov:enable line
-    # :nocov:
-  end
+
+  ## Update Operations
+
+  ## Delete Operations
 
 end

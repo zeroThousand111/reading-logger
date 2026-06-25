@@ -199,4 +199,20 @@ def setup
     assert_equal "The reading session has been logged.", session[:success]  
   end
 
+  ## get /reader/add_reader
+  def test_add_reader_view_displays_expected
+    get "/reader/add_reader"
+
+    assert_equal 200, last_response.status
+    # Test part of expected view template - this is currently failing WHY?
+    assert_includes "<p>Enter name of reader:</p>", last_response.body, "Expected view template content not rendered"
+  end
+
+  ## post /reader/add_reader
+
+  ### test invalid input raises flash messages and does not update the database
+
+  ### test valid input does update the database
+
+
 end

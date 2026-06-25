@@ -36,7 +36,7 @@
     <form action="/reader/<%= params[:reader_id] %>" method="post">
       <fieldset>
         <label for="pages_read"><p>Enter number of pages read</p></label>
-        <input type="number" name="pages_read">
+        <input type="number" name="pages_read" min="0" max="999">
         <input type="submit" name="submit" value="Enter">
       </fieldset>
     </form>
