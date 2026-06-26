@@ -45,4 +45,12 @@
   <div class="row">
     <p><a href="/dashboard" >Return to dashboard</a></p>
   </div>
+
+  <div class="row">
+    <form action="/reader/<%= params[:reader_id] %>/delete_reader" method="post">
+      <fieldset>
+        <input type="submit" name="submit" value="Delete this user">
+      </fieldset>
+    </form>
+  </div>
 </div>

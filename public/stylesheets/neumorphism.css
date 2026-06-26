@@ -43,6 +43,10 @@ a:hover, a:focus {
   color: white;
 }
 
+#delete-reader {
+  color: red;
+}
+
 span {
   color: #54affb;
 }

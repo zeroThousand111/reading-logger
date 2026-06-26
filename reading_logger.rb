@@ -186,5 +186,20 @@ post "/reader/:reader_id" do
     session[:success] = "The reading session has been logged."
     redirect "/reader/#{reader_id}"
   end
+end
 
+post "/reader/:reader_id/delete_reader" do
+  id = params[:reader_id].to_i # id rather than reader_id to conform to database primary key for `readers` table
+
+  if [1, 2, 3, 4].include?(id) # conditional logic to prevent my kids, niece and nephew deleting themselves!
+    session[:error] = "Sorry.  I wrote this app for you. You can't delete your profile!"
+    # reassigns variables necessary to reload GET /reader/:reader_id
+    reader_id = params[:reader_id]
+    @reader = fetch_reader(reader_id)
+    erb :reader, layout: :layout
+  else
+    @data.delete_reader(id)
+    session[:success] = "That reader has been deleted."
+    redirect "/dashboard"
+  end
 end

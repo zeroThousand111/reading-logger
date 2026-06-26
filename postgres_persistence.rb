@@ -4,7 +4,7 @@ class PostgresPersistence
   def initialize(db_connection, logger)
     # Assign the passed-in db_connection to an instance variable
     # This is a Sinatra setting decided upon by which environment the app is in i.e. development, production or testing
-    @db = db_connection 
+    @db = db_connection
     @logger = logger
   end
 
@@ -120,6 +120,13 @@ class PostgresPersistence
 
   ## Update Operations
 
+  ### Don't think I need any for this app right now
+
   ## Delete Operations
+
+  def delete_reader(id)
+    sql = "DELETE FROM readers WHERE id = $1;"
+    query(sql, id)
+  end
 
 end

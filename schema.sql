@@ -11,7 +11,7 @@ VALUES
 
 CREATE TABLE reading_sessions (
   id serial PRIMARY KEY,
-  reader_id integer NOT NULL REFERENCES readers(id),
+  reader_id integer NOT NULL REFERENCES readers(id) ON DELETE CASCADE,
   session_date date NOT NULL DEFAULT CURRENT_DATE,
   pages_read integer NOT NULL
 );

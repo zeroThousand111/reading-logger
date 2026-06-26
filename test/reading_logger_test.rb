@@ -32,7 +32,7 @@ def setup
     db.exec("TRUNCATE readers, reading_sessions RESTART IDENTITY;")
 
     # Add test data for every test
-    db.exec("INSERT INTO readers (name) VALUES ('Simeon'), ('Rya');")
+    db.exec("INSERT INTO readers (name) VALUES ('Simeon'), ('Rya'), ('Eshan'), ('Amiya'), ('User to be deleted');")
     
     # Summary of pages_read for sessions using this test data:
     # Simeon 
@@ -45,6 +45,16 @@ def setup
       ## yesterday - 0 - check the zero output on display from helper method
       ## 7 days - 405
       ## total - 450
+    # Eshan
+      ## no reading_sessions data
+    # Amiya
+      ## no reading_sessions data
+    # 'User to be deleted'
+      ## today - 99
+      ## yesterday - 0
+      ## 7 days - 99
+      ## total - 99
+      
     db.exec(
       "INSERT INTO reading_sessions (reader_id, session_date, pages_read)
       VALUES
@@ -57,7 +67,8 @@ def setup
       (2, CURRENT_DATE - INTERVAL '3 day', 100),
       (2, CURRENT_DATE - INTERVAL '3 day', 50),
       (2, CURRENT_DATE - INTERVAL '2 day', 200),
-      (2, DEFAULT, 55);"
+      (2, DEFAULT, 55),
+      (5, DEFAULT, 99);"
     )
 
     db.close # Close the setup-specific connection
@@ -136,7 +147,7 @@ def setup
   ### test invalid :reader_id that doesn't match the test database readers table records
 
   def test_reader_view_invalid_reader
-    get "/reader/3"
+    get "/reader/99"
 
     #### redirect to get /dashboard
     assert_equal "http://example.org/dashboard", last_response.headers['location']
@@ -337,7 +348,7 @@ def setup
   ### test valid input does update the database
 
   def test_valid_input_to_name_of_new_reader
-    post "/reader/add_reader", {reader_name: "Amiya" }
+    post "/reader/add_reader", { reader_name: "Graham" }
 
     #### The route redirects without error, so the status should be 302 (OK).
     assert_equal 302, last_response.status
@@ -355,14 +366,68 @@ def setup
       WHERE id = $1;
     SQL
   
-    result = db.exec_params(sql, [3])
+    result = db.exec_params(sql, [6])
     new_name = result.getvalue(0, 0) # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
     db.close # Important: close the connection
 
-    assert_equal new_name, "Amiya"
+    assert_equal new_name, "Graham"
 
     #### Check presentation logic in the resulting GET route
     get last_response["Location"]
-    assert_includes last_response.body, "Amiya" # new name present in dashboard
+    assert_includes last_response.body, "Graham" # new name present in dashboard
   end
+
+
+  ## post /reader/:reader_id/delete_reader
+
+  ### test valid input does update the database
+
+  def test_reader_can_be_deleted
+    post "/reader/5/delete_reader" # explicitly call the route with :reader_id i.e. not post "/reader/:reader_id/delete_reader, { reader_id: "5" }"
+
+    ##### The route redirects to `GET /dashboard`
+    assert_equal "http://example.org/dashboard", last_response.headers['location']
+    ##### The route redirects without error, so the status should be 302 (OK).
+    assert_equal 302, last_response.status
+    ##### Correct error flash message included in the session
+    assert_equal "That reader has been deleted.", session[:success]
+
+    #### Check data logic in the POST route
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT name
+      FROM readers
+      WHERE id = $1;
+    SQL
+    result = db.exec_params(sql, [5])
+    db.close # Important: close the connection
+
+    ##### deleted reader id 5 should be gone now and so the results set from the above query should contain no rows at all
+    assert_equal 0, result.ntuples
+
+    #### Check presentation logic in the resulting GET route
+    get last_response["Location"]
+    ##### This user should be gone from the dashboard now
+    refute_includes last_response.body, "User to be deleted" 
+  end
+
+  def test_protected_reader_simeon_1_cannot_be_deleted
+    post "/reader/1/delete_reader"
+    
+    #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+
+    #### Correct error flash message included in the body
+    assert_includes last_response.body, "Sorry.  I wrote this app for you. You can&#39;t delete your profile!"
+  end
+
+  def test_protected_reader_amiya_4_cannot_be_deleted
+    post "/reader/4/delete_reader"
+    #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+
+    #### Correct error flash message included in the body
+    assert_includes last_response.body, "Sorry.  I wrote this app for you. You can&#39;t delete your profile!"
+  end
+
 end
