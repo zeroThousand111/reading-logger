@@ -166,7 +166,7 @@ def setup
     post "/reader/1", { pages_read: "a" }
     
     #### The error message is stored in the session, not the response headers.  But the session[:error] is deleted immediately by the code in the view template, so it is not accessible with this reload of the same page.   Instead I will check that the response body shows the flash error message to the user.
-    assert_includes last_response.body, "Pages read must be a valid number."
+    assert_includes last_response.body, "Pages read must be a valid number greater than zero."
     #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
     assert_equal 200, last_response.status
 
@@ -175,7 +175,14 @@ def setup
     #### Since the route renders a view on error, the status should be 200 (OK).
     assert_equal 200, last_response.status
     #### I expect a different error flash message in the body this time
-    assert_includes last_response.body, "Pages read must be a number greater than zero."
+    assert_includes last_response.body, "Pages read must be a valid number greater than zero."
+
+    #### generate POST HTTP request to Rya/2 with numeric string input "1000"
+    post "/reader/2", { pages_read: "1000" }
+    #### Since the route renders a view on error, the status should be 200 (OK).
+    assert_equal 200, last_response.status
+    #### I expect a different error flash message in the body this time
+    assert_includes last_response.body, "There is no way you read that much in one go!"
   end
 
   ### test valid input does update the database

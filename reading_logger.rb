@@ -62,15 +62,15 @@ end
 
 ## helper validation methods
 
-def detect_invalid_input_for_pages_read(pages_read_string)
-  # Check if the string is not a numeric String.  The `to_i` method on a string like "a" returns 0, so "a".to_i.to_s == "0", not "a".
-  return "Pages read must be a valid number." if pages_read_string.to_i.to_s != pages_read_string
+def detect_invalid_input_for_pages_read(pages_read)
+  # pages_read is an Integer
+  # a non-digit value e.g. "a" input will have been converted to 0 by String#to_i in the POST "/reader/:reader_id" route
+  # Therefore, this test checks for non-Integers AND Integers below zero
 
-  # Now that we know it's a number, check if it's positive.
-  return "Pages read must be a number greater than zero." if pages_read_string.to_i <= 0
+  return "Pages read must be a valid number greater than zero." if pages_read <= 0
 
   # Pages read shouldn't be higher than 999.  None of my kids read that much in one session!
-  return "There is no way you read that much in one go!" if pages_read_string.to_i > 999
+  return "There is no way you read that much in one go!" if pages_read > 999
 
   # If all checks pass, return nil (falsy, indicating no error).
   nil
@@ -95,8 +95,6 @@ def detect_invalid_input_for_new_reader_name(reader_name)
 
   # Check that reader_name is not a duplicate
   return "This name already exists.  Choose another." if detect_duplicate_name_for_new_reader(reader_name)
-
-  #
 
   nil
 end
@@ -160,15 +158,16 @@ post "/reader/add_reader" do
 end
 
 get "/reader/:reader_id" do
-  # do I need to type cast :reader_id and :pages_read?  If not, why?
-  reader_id = params[:reader_id]
+  # Type cast :reader_id from String to Integer as good practice
+  reader_id = params[:reader_id].to_i
   @reader = fetch_reader(reader_id)
   erb :reader, layout: :layout
 end
 
 post "/reader/:reader_id" do
-  reader_id = params[:reader_id]
-  pages_read = params[:pages_read] # use this for name of corresponding field from form in view template
+  # Type cast :reader_id and :pages_read from String to Integer as good practice from when they come to app from view layer
+  reader_id = params[:reader_id].to_i
+  pages_read = params[:pages_read].to_i
   
   # returns one of two error message strings or nil
   error = detect_invalid_input_for_pages_read(pages_read)
@@ -177,12 +176,10 @@ post "/reader/:reader_id" do
     # assigns one of two error message strings to session[:error]
     session[:error] = error
     # reassigns variables necessary to reload GET /reader/:reader_id
-    reader_id = params[:reader_id]
     @reader = fetch_reader(reader_id)
     erb :reader, layout: :layout
   else # if error is nil i.e. falsy
-    # I type cast :reader_id and :pages_read from Strings to Integers here
-    @data.log_reading_session(reader_id.to_i, pages_read.to_i)
+    @data.log_reading_session(reader_id, pages_read)
     session[:success] = "The reading session has been logged."
     redirect "/reader/#{reader_id}"
   end
