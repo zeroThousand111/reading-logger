@@ -74,7 +74,7 @@ class PostgresPersistence
       (SELECT SUM(pages_read) FROM reading_sessions WHERE session_date BETWEEN   (CURRENT_DATE - 7) AND CURRENT_DATE AND reader_id = readers.id) AS   pages_read_seven_days,
       (SELECT SUM(pages_read) FROM reading_sessions WHERE reader_id = readers.id)   AS pages_read_ever
     FROM readers
-    ORDER BY id;
+    ORDER BY pages_read_seven_days DESC NULLS LAST;
     SQL
   
     # connect to database and get PG::Result object
