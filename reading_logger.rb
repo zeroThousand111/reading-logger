@@ -99,6 +99,24 @@ def detect_invalid_input_for_new_reader_name(reader_name)
   nil
 end
 
+
+def detect_invalid_input_for_session_date(session_date)
+  # Checks that session_date is a String with the YYYY-MM-DD format
+  # use Regex to match.  =~ will return 0 if a match, nil otherwise
+  return "The reading session date must be in a string in the YYYY-MM-DD format." unless session_date =~ /^([0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|0[1-9]|[1-2][0-9])$/
+
+  # converts session_date to Date class object
+  date = Date.parse(session_date)
+  # assigns Date object with today's date
+  today = Date.today
+
+  return "The reading session date can't be in the future." if date > today
+
+  return "The reading session date can't be more than 31 days ago." if date < (today - 31)
+
+  nil
+end
+
 # before and after blocks
 
 before do  
@@ -168,18 +186,28 @@ post "/reader/:reader_id" do
   # Type cast :reader_id and :pages_read from String to Integer as good practice from when they come to app from view layer
   reader_id = params[:reader_id].to_i
   pages_read = params[:pages_read].to_i
-  
-  # returns one of two error message strings or nil
-  error = detect_invalid_input_for_pages_read(pages_read)
+  # Date is ISO format YYYY-MM-DD String and doesn't need to be type cast
+  session_date = params[:session_date]
 
-  if error # if error is truthy
+  # returns one of two error message strings or nil
+  pages_read_error = detect_invalid_input_for_pages_read(pages_read)
+  # returns one of three error message strings or nil
+  session_date_error = detect_invalid_input_for_session_date(session_date)
+
+  if pages_read_error # if pages_read_error is truthy
     # assigns one of two error message strings to session[:error]
-    session[:error] = error
+    session[:error] = pages_read_error
     # reassigns variables necessary to reload GET /reader/:reader_id
     @reader = fetch_reader(reader_id)
     erb :reader, layout: :layout
-  else # if error is nil i.e. falsy
-    @data.log_reading_session(reader_id, pages_read)
+  elsif session_date_error # if session_date_error is truthy
+    # assigns one of two error message strings to session[:error]
+    session[:error] = session_date_error
+    # reassigns variables necessary to reload GET /reader/:reader_id
+    @reader = fetch_reader(reader_id)
+    erb :reader, layout: :layout   
+  else # if both pages_read_error and session_date_error are nil i.e. falsy
+    @data.log_reading_session(reader_id, pages_read, session_date)
     session[:success] = "The reading session has been logged."
     redirect "/reader/#{reader_id}"
   end

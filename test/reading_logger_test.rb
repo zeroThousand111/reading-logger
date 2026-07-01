@@ -185,11 +185,46 @@ def setup
     assert_includes last_response.body, "There is no way you read that much in one go!"
   end
 
+  def test_invalid_input_to_session_date
+    ### test invalid date format
+
+    #### generate POST HTTP request to Simeon/1 with pages read of "1" and date of invalid String format
+    post "/reader/1", { pages_read: "1", session_date: "invalid" }
+
+    # As the page should reload (not redirect) I will check that the response body shows the flash error message to the user.
+    assert_includes last_response.body, "The reading session date must be in a string in the YYYY-MM-DD format."
+    #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+
+    ### test invalid future date
+
+    #### generate POST HTTP request to Simeon/1 with pages read of "1" and date of tomorrow
+    tomorrow = (Date.today + 1).strftime("%Y-%m-%d")
+    post "/reader/1", { pages_read: "1", session_date: tomorrow }
+
+    # As the page should reload (not redirect) I will check that the response body shows the flash error message to the user.
+    assert_includes last_response.body, "The reading session date can&#39;t be in the future."
+    #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+
+    ### test invalid past date
+
+    #### generate POST HTTP request to Simeon/1 with pages read of "1" and date of this time last year
+    last_year = (Date.today - 365 ).strftime("%Y-%m-%d")
+    post "/reader/1", { pages_read: "1", session_date: last_year }
+
+    # As the page should reload (not redirect) I will check that the response body shows the flash error message to the user.
+    assert_includes last_response.body, "The reading session date can&#39;t be more than 31 days ago."
+    #### The route renders a view, not a redirect on error, so the status should be 200 (OK).
+    assert_equal 200, last_response.status
+  end
+
   ### test valid input does update the database
 
   def test_valid_input_to_pages_read_for_reader1_simeon
-    #### generate POST HTTP request to Simeon/1 with numeric input "500"
-    post "/reader/1", { pages_read: "500" }
+    #### generate POST HTTP request to Simeon/1 with numeric input "500" and today's date
+    today = Date.today.strftime("%Y-%m-%d")
+    post "/reader/1", { pages_read: "500", session_date: today }
 
     #### The route redirects without error, so the status should be 302 (OK).
     assert_equal 302, last_response.status
@@ -251,8 +286,9 @@ def setup
   end
 
   def test_valid_input_to_pages_read_for_reader2_rya
-    #### generate POST HTTP request to Rya/2 with numeric input "50"
-    post "/reader/2", { pages_read: "50" }
+    #### generate POST HTTP request to Rya/2 with numeric input "50" and today's date
+    today = Date.today.strftime("%Y-%m-%d")
+    post "/reader/2", { pages_read: "50", session_date: today}
 
     #### The route redirects without error, so the status should be 302 (OK).
     assert_equal 302, last_response.status

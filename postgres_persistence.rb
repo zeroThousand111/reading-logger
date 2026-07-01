@@ -57,9 +57,9 @@ class PostgresPersistence
     query(sql, reader_name)
   end
 
-  def log_reading_session(reader_id, pages_read)
-    sql = "INSERT INTO reading_sessions (reader_id,pages_read) VALUES($1, $2);"
-    query(sql, reader_id, pages_read)
+  def log_reading_session(reader_id, pages_read, session_date)
+    sql = "INSERT INTO reading_sessions (reader_id, pages_read, session_date) VALUES($1, $2, $3);"
+    query(sql, reader_id, pages_read, session_date)
   end
 
   ## Read Operations
