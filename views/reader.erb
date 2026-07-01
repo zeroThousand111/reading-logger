@@ -35,25 +35,32 @@
   <div class="row">
     <form action="/reader/<%= params[:reader_id] %>" method="post">
       <fieldset>
-        <label for="pages_read"><p>Enter number of pages read:</p></label>
-        <input type="number" name="pages_read" min="0" max="999">
-      </fieldset>
-
-      <fieldset>
-        <label for="date"><p>Date of reading session:</p></label>
+        <label for="pages_read"><p>Enter the number of pages read:</p></label>
         <input
-        type="date"
-        id="session_date"
-        name="session_date"
-        value="<%= Date.today.strftime("%Y-%m-%d") %>"
-        min="<%= (Date.today - 31).strftime("%Y-%m-%d") %>"
-        max="<%= Date.today.strftime("%Y-%m-%d") %>"
-        required
+          type="number" 
+          name="pages_read" 
+          id="pages_read" 
+          min="0" 
+          max="999"
+          placeholder="0"
         />
       </fieldset>
 
       <fieldset>
-        <input type="submit" name="submit" value="Submit Pages Read & Date">
+        <label for="date"><p>Pick the date of the reading session:</p></label>
+        <input
+          type="date"
+          id="session_date"
+          name="session_date"
+          value="<%= Date.today.strftime("%Y-%m-%d") %>"
+          min="<%= (Date.today - 31).strftime("%Y-%m-%d") %>"
+          max="<%= Date.today.strftime("%Y-%m-%d") %>"
+          required
+        />
+      </fieldset>
+
+      <fieldset>
+        <input type="submit" name="submit" value="Submit" class="button">
       </fieldset>
 
     </form>
@@ -66,7 +73,7 @@
   <div class="row">
     <form action="/reader/<%= params[:reader_id] %>/delete_reader" method="post">
       <fieldset>
-        <input type="submit" name="submit" value="Delete this user">
+        <input type="submit" name="submit" value="Delete this user" class="button">
       </fieldset>
     </form>
   </div>

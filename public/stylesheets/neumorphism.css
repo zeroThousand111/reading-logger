@@ -106,9 +106,9 @@ th {
 }
 
 .row {
-  margin-block: 1em;
+  /* margin-block: 1em; */
   margin-inline: auto;
-  padding-block: 1em;
+  padding-block: 0.75em;
   text-align: center;
   /* border: solid 2px yellow; */
 }
@@ -117,6 +117,7 @@ th {
 
 .flash-message {
   text-align: center;
+  margin-block-end: 2rem;
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
@@ -139,6 +140,20 @@ th {
 
 fieldset {
   border-style: hidden;
+}
+
+label {
+  display: block;
+  margin-block: 0.75rem;
+}
+
+.button {
+  padding-block: 0.25rem;
+  padding-inline: 3rem;
+}
+
+#pages_read {
+  width: 15%;
 }
 
 /* Media Queries */
