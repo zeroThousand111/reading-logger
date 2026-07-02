@@ -37,7 +37,7 @@ def setup
     # Summary of pages_read for sessions using this test data:
     # Simeon 
       ## today - 0
-      ## yesterday - 20 - check the zero output on display from helper method
+      ## yesterday - 0 - check the zero output on display from helper method
       ## 7 days - 35
       ## total - 100
     # Rya 
@@ -61,8 +61,6 @@ def setup
       (1, CURRENT_DATE - INTERVAL '10 day', 65),
       (1, CURRENT_DATE - INTERVAL '2 day', 10),
       (1, CURRENT_DATE - INTERVAL '2 day', 5),
-      (1, CURRENT_DATE - INTERVAL '1 day', 15),
-      (1, CURRENT_DATE - INTERVAL '1 day', 5),
       (2, CURRENT_DATE - INTERVAL '99 day', 45),
       (2, CURRENT_DATE - INTERVAL '3 day', 100),
       (2, CURRENT_DATE - INTERVAL '3 day', 50),
@@ -232,6 +230,12 @@ def setup
     assert_equal "http://example.org/reader/1", last_response.headers['location']
 
     #### Check data logic in the POST route
+      # Simeon 
+      ## today - 0 + 500 = 500
+      ## yesterday = 0 - check is 0 from database NULL value 
+      ## 7 days - 15 + 500 = 515
+      ## total - 80 + 500 = 580
+
     #### Simeon's Pages Today are now 500
 
     db = PG.connect(dbname: "reading_log_test")
@@ -245,6 +249,20 @@ def setup
     pages_today = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
     db.close # Important: close the connection
 
+    #### Simeon's Pages Yesterda are still 0
+
+    db = PG.connect(dbname: "reading_log_test")
+    sql = <<~SQL
+      SELECT SUM(pages_read) 
+      FROM reading_sessions 
+      WHERE reader_id = $1 AND session_date = CURRENT_DATE - 1;
+    SQL
+  
+    result = db.exec_params(sql, [1])
+    pages_yesterday = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
+    db.close # Important: close the connection
+    assert_equal 0, pages_yesterday
+
     #### Simeon's 7 days pages are now 535
     db = PG.connect(dbname: "reading_log_test")
     sql = <<~SQL
@@ -256,7 +274,7 @@ def setup
     result = db.exec_params(sql, [1])
     pages_7_days = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
     db.close # Important: close the connection
-    assert_equal 535, pages_7_days
+    assert_equal 515, pages_7_days
 
     #### Simeon's Total Pages are now 600
     db = PG.connect(dbname: "reading_log_test")
@@ -269,7 +287,7 @@ def setup
     result = db.exec_params(sql, [1])
     total_pages = result.getvalue(0, 0).to_i
 
-    assert_equal 600, total_pages
+    assert_equal 580, total_pages
 
     db.close # Important: close the connection
     
@@ -280,15 +298,22 @@ def setup
     ##### make redirect request then examine the last_request.body for the same values as above
     #### Check presentation logic in the resulting GET route
     get last_response["Location"]
-    assert_includes last_response.body, "600" # 600 total pages read
-    assert_includes last_response.body, "535" # 535 pages read in last 7 days
+    assert_includes last_response.body, "580" # 600 total pages read
+    assert_includes last_response.body, "515" # 535 pages read in last 7 days
     assert_includes last_response.body, "500" # 500 pages read today
+    assert_includes last_response.body, "0" # 0 pages read today
   end
 
   def test_valid_input_to_pages_read_for_reader2_rya
     #### generate POST HTTP request to Rya/2 with numeric input "50" and today's date
-    today = Date.today.strftime("%Y-%m-%d")
-    post "/reader/2", { pages_read: "50", session_date: today}
+    yesterday = (Date.today - 1).strftime("%Y-%m-%d")
+    post "/reader/2", { pages_read: "50", session_date: yesterday}
+      
+    # Rya 
+      ## today - 55 + 50 = 105
+      ## yesterday - 0 + 50 = 50
+      ## 7 days - 405 + 50 = 455
+      ## total - 450 + 50 = 500
 
     #### The route redirects without error, so the status should be 302 (OK).
     assert_equal 302, last_response.status
@@ -299,7 +324,7 @@ def setup
 
     #### Check data logic in the POST route
 
-    #### Rya's Pages Today are now 105
+    #### Rya's Pages Today are still 55
 
     db = PG.connect(dbname: "reading_log_test")
     sql = <<~SQL
@@ -311,6 +336,9 @@ def setup
     result = db.exec_params(sql, [2])
     pages_today = result.getvalue(0, 0).to_i # .getvalue(row, col) is useful for retrieving single values from PG::Result objects
     db.close # Important: close the connection
+    assert_equal 55, pages_today
+
+    #### Rya's pages yesterday are now 50
 
     #### Rya's 7 days pages are now 455
     db = PG.connect(dbname: "reading_log_test")
@@ -326,7 +354,7 @@ def setup
     db.close # Important: close the connection
     assert_equal 455, pages_7_days
 
-    #### Simeon's Total Pages are now 500
+    #### Rya's Total Pages are now 500
     db = PG.connect(dbname: "reading_log_test")
     sql = <<~SQL
       SELECT SUM(pages_read) 
@@ -346,7 +374,8 @@ def setup
     get last_response["Location"]
     assert_includes last_response.body, "500" # 500 total pages read
     assert_includes last_response.body, "455" # 455 pages read in last 7 days
-    assert_includes last_response.body, "105" # 105 pages read today
+    assert_includes last_response.body, "55" # 55 pages read today
+    assert_includes last_response.body, "50" # 50 pages read yesterday
   end
 
   ## get /reader/add_reader
@@ -419,7 +448,6 @@ def setup
     get last_response["Location"]
     assert_includes last_response.body, "Graham" # new name present in dashboard
   end
-
 
   ## post /reader/:reader_id/delete_reader
 
