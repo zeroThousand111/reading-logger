@@ -27,8 +27,6 @@ end
 
 # This configure block runs only when RACK_ENV is 'production'
 configure(:production) do
-  ## Heroku and other providers set a DATABASE_URL environment variable
-  db = PG.connect(ENV['DATABASE_URL'])
   ## Assigns Sinatras settings hash a key :db_url with the URL for the PRODUCTION database ENV['DATABASE_URL']
   set :db_url, ENV['DATABASE_URL']
 end
