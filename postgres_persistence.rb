@@ -40,12 +40,12 @@ class PostgresPersistence
     ### I transform the numeric String values to Integers in the main reading_logger.rb application file
     result.map do |tuple|
       {
-        reader_id: tuple['reader_id'], # numeric String
+        reader_id: tuple['reader_id'].to_i, # numeric String
         name: tuple['name'], # String
-        pages_read_today: transform_nil_values_to_zero(tuple['pages_read_today']), # numeric String
-        pages_read_yesterday: transform_nil_values_to_zero(tuple['pages_read_yesterday']), # numeric String
-        pages_read_seven_days: transform_nil_values_to_zero(tuple['pages_read_seven_days']), # numeric String
-        pages_read_ever: transform_nil_values_to_zero(tuple['pages_read_ever']) # numeric String
+        pages_read_today: transform_nil_values_to_zero(tuple['pages_read_today'].to_i), # numeric String
+        pages_read_yesterday: transform_nil_values_to_zero(tuple['pages_read_yesterday'].to_i), # numeric String
+        pages_read_seven_days: transform_nil_values_to_zero(tuple['pages_read_seven_days'].to_i), # numeric String
+        pages_read_ever: transform_nil_values_to_zero(tuple['pages_read_ever'].to_i) # numeric String
       }
     end
   end
